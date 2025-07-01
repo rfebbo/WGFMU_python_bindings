@@ -10,4 +10,4 @@ The C++ file was initially created using a python script which parses wgfmu.h th
 
 ## Building
 
-The wgfmu.h and wgfmu.lib files from B1530A wgfmu instrument library are required. After installation, they should be located in the Program Files/Aligent/B1530A directory. This project was built using Visual Studio 2022. The .sln file is included. Once the project is built, copy the .pyc file to the Python site-packages folder.
+The wgfmu.h and wgfmu.lib files from B1530A wgfmu instrument library are required. After installation, they should be located in the C:\Program Files\Agilent\B1530A\ directory. This project was built using Visual Studio 2022. The .sln file is included. Once the project is built, copy the .pyd file to the Python site-packages folder.
