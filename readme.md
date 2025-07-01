@@ -7,10 +7,6 @@
 - Python with pybind11
 
 
-## Current Status
-
-The C++ file was initially generated using a python script which parsed wgfmu.h then it was modified by hand. The manual modifications fixed a few functions that used C++ pointers which needed to be converted into std::vectors. There are still several funcitons which need this treatment.
-
 ## Building
 
 This project was built using Visual Studio 2022. The wgfmu.h and wgfmu.lib files from B1530A wgfmu instrument library are required. After installation, they should be located in the C:\Program Files\Agilent\B1530A\ directory. Install Python then, using pip, install pybind11.
