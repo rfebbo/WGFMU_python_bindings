@@ -27,3 +27,5 @@ Depending on the python version installed, the AdditionalLibraryDirectories and 
 Open the .sln file with Visual Studio 2022, right click on the project and build solution.
 
 Once the project is built, copy the .pyd file to the Python site-packages folder.
+
+Optionally copy the .pyi file to the Python site-packages folder for docstrings

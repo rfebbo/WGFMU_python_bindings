@@ -22,58 +22,152 @@ int initialize() {
 int setTimeout(double timeout) {
     return WGFMU_setTimeout(timeout);
 }
-int doSelfCalibration(int* result, char* detail, int* size) {
-    return WGFMU_doSelfCalibration(result, detail, size);
+
+py::tuple doSelfCalibration() {
+    int result;
+    int size = 256;
+    char* detail = new char[size]; // pre-allocated buffer
+
+    int rv;
+    rv = WGFMU_doSelfCalibration(&result, detail, &size);
+
+    if (rv != 0) {
+        std::cerr << "WGFMU_doSelfCalibration Error Code: " << rv << std::endl;
+    }
+
+    std::string detail_str(detail, size);
+
+    delete[] detail; // free the allocated buffer
+
+    return py::make_tuple(result, detail_str);
 }
 
 py::tuple doSelfTest() {
     int result = 0;
-    int size = 1024; // max detail buffer size (change if needed)
-    std::vector<char> detail(size, 0);  // pre-allocated buffer
+    int size = 256; // max detail buffer size
+    char *detail = new char[size]; // pre-allocated buffer
 
-    int ret_code = WGFMU_doSelfTest(&result, detail.data(), &size);
+    int ret_code = WGFMU_doSelfTest(&result, detail, &size);
 
-    // Convert char* buffer to std::string (ensure it�s null-terminated)
-    std::string detail_str(detail.data(), strnlen(detail.data(), size));
+    if (ret_code != 0) {
+        std::cerr << "WGFMU_doSelfTest Error Code: " << ret_code << std::endl;
+    }
 
-    return py::make_tuple(ret_code, result, detail_str, size);
+    // Convert char* buffer to std::string (ensure it's null-terminated)
+    std::string detail_str(detail, size);
+
+    delete[] detail; // free the allocated buffer
+
+    return py::make_tuple(result, detail_str);
 }
 
+std::vector<int> getChannelIds() {
+    int rv;
+    int size;
+    rv = WGFMU_getChannelIdSize(&size);
 
+    if (rv != 0) {
+        std::cerr << "WGFMU_getChannelIdSize Error Code: " << rv << std::endl;
+        return {};
+    }
 
-int getChannelIdSize(int size) {
-    return WGFMU_getChannelIdSize(&size);
+    std::vector<int> channelIdsVec(size);
+    
+    rv = WGFMU_getChannelIds(channelIdsVec.data(), &size);
+
+    if (rv != 0) {
+        std::cerr << "WGFMU_getChannelIds Error Code: " << rv << std::endl;
+    }
+
+    return channelIdsVec;
 }
-int getChannelIds(int* channelIds, int* size) {
-    return WGFMU_getChannelIds(channelIds, size);
+
+std::string getError() {
+    int size;
+    int rv;
+    rv = WGFMU_getErrorSize(&size);
+    if (rv != 0) {
+        std::cerr << "WGFMU_getErrorSize Error Code: " << rv << std::endl;
+    }
+    char* error = new char[size];
+    rv = WGFMU_getError(error, &size);
+    
+    if (rv != 0) {
+        std::cerr << "WGFMU_getError Error Code: " << rv << std::endl;
+    }
+    
+    std::string error_str(error, size);
+
+    delete[] error; // free the allocated buffer
+    
+    return error_str;
 }
-int getErrorSize(int* size) {
-    return WGFMU_getErrorSize(size);
+
+std::string getErrorSummary() {
+    int size;
+    int rv;
+    rv = WGFMU_getErrorSummarySize(&size);
+
+    if (rv != 0) {
+        std::cerr << "WGFMU_getErrorSummarySize Error Code: " << rv << std::endl;
+    }
+
+    char* errorSummary = new char[size];
+
+    rv = WGFMU_getErrorSummary(errorSummary, &size);
+
+    if (rv != 0) {
+        std::cerr << "WGFMU_getErrorSummary Error Code: " << rv << std::endl;
+    }
+
+    std::string errorSummary_str(errorSummary, size);
+
+    delete[] errorSummary; // free the allocated buffer
+
+    return errorSummary_str;
 }
-int getError(char* error, int* size) {
-    return WGFMU_getError(error, size);
-}
-int getErrorSummarySize(int* size) {
-    return WGFMU_getErrorSummarySize(size);
-}
-int getErrorSummary(char* errorSummary, int* size) {
-    return WGFMU_getErrorSummary(errorSummary, size);
-}
+
 int treatWarningsAsErrors(int warningLevel) {
     return WGFMU_treatWarningsAsErrors(warningLevel);
 }
 int setWarningLevel(int warningLevel) {
     return WGFMU_setWarningLevel(warningLevel);
 }
-int getWarningLevel(int* warningLevel) {
-    return WGFMU_getWarningLevel(warningLevel);
+int getWarningLevel() {
+    int warningLevel;
+    int rv;
+
+    rv = WGFMU_getWarningLevel(&warningLevel);
+
+    if (rv != 0) {
+        std::cerr << "WGFMU_getWarningLevel Error Code: " << rv << std::endl;
+    }
+
+    return warningLevel;
 }
-int getWarningSummarySize(int* size) {
-    return WGFMU_getWarningSummarySize(size);
+
+std::string getWarningSummary() {
+    int rv;
+    int size;
+    rv = WGFMU_getWarningSummarySize(&size);
+
+    if (rv != 0) {
+        std::cerr << "WGFMU_getWarningSummarySize Error Code: " << rv << std::endl;
+    }
+    char* warningSummary = new char[size];
+    rv = WGFMU_getWarningSummary(warningSummary, &size);
+
+    if (rv != 0) {
+        std::cerr << "WGFMU_getWarningSummary Error Code: " << rv << std::endl;
+    }
+
+    std::string warningSummary_str(warningSummary, size);
+
+    delete[] warningSummary; // free the allocated buffer
+
+    return warningSummary_str;
 }
-int getWarningSummary(char* warningSummary, int* size) {
-    return WGFMU_getWarningSummary(warningSummary, size);
-}
+
 int openLogFile(const char* fileName) {
     return WGFMU_openLogFile(fileName);
 }
@@ -83,58 +177,147 @@ int closeLogFile() {
 int setOperationMode(int channelId, int operationMode) {
     return WGFMU_setOperationMode(channelId, operationMode);
 }
-int getOperationMode(int channelId, int* operationMode) {
-    return WGFMU_getOperationMode(channelId, operationMode);
+int getOperationMode(int channelId) {
+    int operationMode;
+    int rv;
+
+    rv = WGFMU_getOperationMode(channelId, &operationMode);
+
+    if (rv != 0) {
+        std::cerr << "WGFMU_getOperationMode Error Code: " << rv << std::endl;
+    }
+
+    return operationMode;
 }
 int setForceVoltageRange(int channelId, int forceVoltageRange) {
     return WGFMU_setForceVoltageRange(channelId, forceVoltageRange);
 }
-int getForceVoltageRange(int channelId, int* forceVoltageRange) {
-    return WGFMU_getForceVoltageRange(channelId, forceVoltageRange);
+
+int getForceVoltageRange(int channelId) {
+    int forceVoltageRange;
+    int rv;
+    rv = WGFMU_getForceVoltageRange(channelId, &forceVoltageRange);
+
+    if (rv != 0) {
+        std::cerr << "WGFMU_getForceVoltageRange Error Code: " << rv << std::endl;
+    }
+
+    return forceVoltageRange;
 }
+
 int setMeasureMode(int channelId, int measureMode) {
     return WGFMU_setMeasureMode(channelId, measureMode);
 }
-int getMeasureMode(int channelId, int measureMode) {
-    int* measureMode_p = &measureMode;
-    return WGFMU_getMeasureMode(channelId, measureMode_p);
+
+int getMeasureMode(int channelId) {
+    int measureMode;
+    int rv;
+    rv = WGFMU_getMeasureMode(channelId, &measureMode);
+
+    if (rv != 0) {
+        std::cerr << "WGFMU_getMeasureMode Error Code: " << rv << std::endl;
+    }
+
+    return measureMode;
 }
+
 int setMeasureVoltageRange(int channelId, int measureVoltageRange) {
     return WGFMU_setMeasureVoltageRange(channelId, measureVoltageRange);
 }
-int getMeasureVoltageRange(int channelId, int* measureVoltageRange) {
-    return WGFMU_getMeasureVoltageRange(channelId, measureVoltageRange);
+int getMeasureVoltageRange(int channelId) {
+    int measureVoltageRange;
+    int rv;
+    rv = WGFMU_getMeasureVoltageRange(channelId, &measureVoltageRange);
+
+    if (rv != 0) {
+        std::cerr << "WGFMU_getMeasureVoltageRange Error Code: " << rv << std::endl;
+    }
+
+    return measureVoltageRange;
+
 }
 int setMeasureCurrentRange(int channelId, int measureCurrentRange) {
     return WGFMU_setMeasureCurrentRange(channelId, measureCurrentRange);
 }
-int getMeasureCurrentRange(int channelId, int* measureCurrentRange) {
-    return WGFMU_getMeasureCurrentRange(channelId, measureCurrentRange);
+
+int getMeasureCurrentRange(int channelId) {
+    int measureCurrentRange;
+    int rv;
+    rv = WGFMU_getMeasureCurrentRange(channelId, &measureCurrentRange);
+
+    if (rv != 0) {
+        std::cerr << "WGFMU_getMeasureCurrentRange Error Code: " << rv << std::endl;
+    }
+
+    return measureCurrentRange;
 }
+
 int setForceDelay(int channelId, double forceDelay) {
     return WGFMU_setForceDelay(channelId, forceDelay);
 }
-int getForceDelay(int channelId, double* forceDelay) {
-    return WGFMU_getForceDelay(channelId, forceDelay);
+
+double getForceDelay(int channelId) {
+    double forceDelay;
+    int rv;
+    rv = WGFMU_getForceDelay(channelId, &forceDelay);
+
+    if (rv != 0) {
+        std::cerr << "WGFMU_getForceDelay Error Code: " << rv << std::endl;
+    }
+
+    return forceDelay;
 }
+
 int setMeasureDelay(int channelId, double measureDelay) {
     return WGFMU_setMeasureDelay(channelId, measureDelay);
 }
-int getMeasureDelay(int channelId, double* measureDelay) {
-    return WGFMU_getMeasureDelay(channelId, measureDelay);
+
+double getMeasureDelay(int channelId) {
+    double measureDelay;
+    int rv;
+
+    rv = WGFMU_getMeasureDelay(channelId, &measureDelay);
+
+    if (rv != 0) {
+        std::cerr << "WGFMU_getMeasureDelay Error Code: " << rv << std::endl;
+    }
+
+    return measureDelay;
 }
+
 int setMeasureEnabled(int channelId, int measureEnabled) {
     return WGFMU_setMeasureEnabled(channelId, measureEnabled);
 }
-int isMeasureEnabled(int channelId, int* measureEnabled) {
-    return WGFMU_isMeasureEnabled(channelId, measureEnabled);
+
+int isMeasureEnabled(int channelId) {
+    int measureEnabled;
+    int rv;
+    rv = WGFMU_isMeasureEnabled(channelId, &measureEnabled);
+
+    if (rv != 0) {
+        std::cerr << "WGFMU_isMeasureEnabled Error Code: " << rv << std::endl;
+    }
+
+    return measureEnabled;
 }
 int setTriggerOutMode(int channelId, int triggerOutMode, int polarity) {
     return WGFMU_setTriggerOutMode(channelId, triggerOutMode, polarity);
 }
-int getTriggerOutMode(int channelId, int* triggerOutMode, int* polarity) {
-    return WGFMU_getTriggerOutMode(channelId, triggerOutMode, polarity);
+
+py::tuple getTriggerOutMode(int channelId) {
+    int triggerOutMode;
+    int polarity;
+    int rv;
+
+    rv = WGFMU_getTriggerOutMode(channelId, &triggerOutMode, &polarity);
+
+    if (rv != 0) {
+        std::cerr << "WGFMU_getTriggerOutMode Error Code: " << rv << std::endl;
+    }
+
+    return py::make_tuple(triggerOutMode, polarity);
 }
+
 int connect(int channelId) {
     return WGFMU_connect(channelId);
 }
@@ -156,8 +339,10 @@ int addVectors(const char* patternName, double* deltaTimes, double* voltages, in
 int setVector(const char* patternName, double time, double voltage) {
     return WGFMU_setVector(patternName, time, voltage);
 }
-int setVectors(const char* patternName, double* times, double* voltages, int size) {
-    return WGFMU_setVectors(patternName, times, voltages, size);
+int setVectors(const char* patternName, std::vector<double> times, std::vector<double> voltages) {
+    int size = times.size();
+
+    return WGFMU_setVectors(patternName, times.data(), voltages.data(), size);
 }
 int createMergedPattern(const char* patternName, const char* pattern1, const char* pattern2, int axis) {
     return WGFMU_createMergedPattern(patternName, pattern1, pattern2, axis);
@@ -180,82 +365,229 @@ int setTriggerOutEvent(const char* patternName, const char* eventName, double ti
 int addSequence(int channelId, const char* patternName, double loopCount) {
     return WGFMU_addSequence(channelId, patternName, loopCount);
 }
-int addSequences(int channelId, const std::vector<std::string> patternNames, double* loopCounts, int size) {
-    std::vector<const char*> cstrs2;
-    for (auto& str : patternNames) {
-        cstrs2.push_back(const_cast<const char*>(str.c_str()));
+int addSequences(int channelId, const std::vector<std::string> patternNames, std::vector<double> loopCounts) {
+    int size = patternNames.size();
+
+    std::vector<const char*> patternNamesVec(size);
+    double* d_loopCounts = new double[size];
+
+    for (int i = 0; i < size; ++i) {
+        patternNamesVec[i] = patternNames[i].c_str();
     }
 
-    const char** d_patternNames = cstrs2.data();
-    return WGFMU_addSequences(channelId, d_patternNames, loopCounts, size);
-}
-int getPatternForceValueSize(const char* patternName, int* size) {
-    return WGFMU_getPatternForceValueSize(patternName, size);
-}
-int getPatternForceValues(const char* patternName, int offset, int* size, double* forceTimes, double* forceValues) {
-    return WGFMU_getPatternForceValues(patternName, offset, size, forceTimes, forceValues);
-}
-int getPatternForceValue(const char* patternName, int index, double* forceTime, double* forceValue) {
-    return WGFMU_getPatternForceValue(patternName, index, forceTime, forceValue);
-}
-int getPatternInterpolatedForceValue(const char* patternName, double time, double* forceValue) {
-    return WGFMU_getPatternInterpolatedForceValue(patternName, time, forceValue);
-}
-int getPatternMeasureTimeSize(const char* patternName, int* size) {
-    return WGFMU_getPatternMeasureTimeSize(patternName, size);
-}
-int getPatternMeasureTimes(const char* patternName, int offset, int* size, double* measureTimes) {
-    return WGFMU_getPatternMeasureTimes(patternName, offset, size, measureTimes);
-}
-int getPatternMeasureTime(const char* patternName, int index, double* measureTime) {
-    return WGFMU_getPatternMeasureTime(patternName, index, measureTime);
-}
-int getForceValueSize(int channelId, double* size) {
-    return WGFMU_getForceValueSize(channelId, size);
-}
-int getForceValues(int channelId, double offset, int* size, double* forceTimes, double* forceValues) {
-    return WGFMU_getForceValues(channelId, offset, size, forceTimes, forceValues);
-}
-int getForceValue(int channelId, double index, double* forceTime, double* forceValue) {
-    return WGFMU_getForceValue(channelId, index, forceTime, forceValue);
-}
-int getInterpolatedForceValue(int channelId, double time, double* forceValue) {
-    return WGFMU_getInterpolatedForceValue(channelId, time, forceValue);
-}
-int getMeasureTimeSize(int channelId, int* size) {
-    return WGFMU_getMeasureTimeSize(channelId, size);
-}
-int getMeasureTimes(int channelId, int offset, int* size, double* measureTimes) {
-    return WGFMU_getMeasureTimes(channelId, offset, size, measureTimes);
-}
-int getMeasureTime(int channelId, int index, double* measureTime) {
-    return WGFMU_getMeasureTime(channelId, index, measureTime);
-}
-int getMeasureEventSize(int channelId, int* size) {
-    return WGFMU_getMeasureEventSize(channelId, size);
-}
-int getMeasureEvents(int channelId, int offset, int* size, std::vector<std::string> patternNames, std::vector<std::string> eventNames, int* cycles, double* loops, int* counts, int* offsets, int* sizes) {
-    std::vector<char*> cstrs;
-    for (auto& str : eventNames) {
-        cstrs.push_back(const_cast<char*>(str.c_str()));
+    for (int i = 0; i < size; ++i) {
+        d_loopCounts[i] = loopCounts[i];
     }
 
-    char** d_eventNames = cstrs.data();
+    const char **d_patternNames = patternNamesVec.data();
+    return WGFMU_addSequences(channelId, d_patternNames, d_loopCounts, size);
+}
 
-    std::vector<char*> cstrs2;
-    for (auto& str : patternNames) {
-        cstrs2.push_back(const_cast<char*>(str.c_str()));
+py::tuple getPatternForceValues(const char* patternName, int offset) {
+    int size;
+    int rv;
+    rv = WGFMU_getPatternForceValueSize(patternName, &size);
+
+    if (rv != 0) {
+        std::cerr << "WGFMU_getPatternForceValueSize Error Code: " << rv << std::endl;
     }
 
-    char** d_patternNames = cstrs2.data();
-    return WGFMU_getMeasureEvents(channelId, offset, size, d_patternNames, d_eventNames, cycles, loops, counts, offsets, sizes);
+    std::vector<double> forceTimesVec(size);
+    std::vector<double> forceValuesVec(size);
+    rv = WGFMU_getPatternForceValues(patternName, offset, &size, forceTimesVec.data(), forceValuesVec.data());
+    
+    if (rv != 0) {
+        std::cerr << "WGFMU_getPatternForceValues Error Code: " << rv << std::endl;
+    }
+
+    return py::make_tuple(forceTimesVec, forceValuesVec);
 }
-int getMeasureEvent(int channelId, int index, char* patternName, char* eventName, int* cycle, double* loop, int* count, int* offset, int* size) {
-    return WGFMU_getMeasureEvent(channelId, index, patternName, eventName, cycle, loop, count, offset, size);
+
+double getPatternInterpolatedForceValue(const char* patternName, double time) {
+    double forceValue;
+    int rv;
+    rv = WGFMU_getPatternInterpolatedForceValue(patternName, time, &forceValue);
+
+    if (rv != 0) {
+        std::cerr << "WGFMU_getPatternInterpolatedForceValue Error Code: " << rv << std::endl;
+    }
+
+    return forceValue;
 }
-int getMeasureEventAttribute(int channelId, int index, double* time, int* measurementPoints, double* measurementInterval, double* averagingTime, int* rawData) {
-    return WGFMU_getMeasureEventAttribute(channelId, index, time, measurementPoints, measurementInterval, averagingTime, rawData);
+
+std::vector<double> getPatternMeasureTimes(const char* patternName) {
+    int size;
+    int rv;
+    rv = WGFMU_getPatternMeasureTimeSize(patternName, &size);
+
+    if (rv != 0) {
+        std::cerr << "WGFMU_getPatternMeasureTimeSize Error Code: " << rv << std::endl;
+    }
+
+    if (size <= 0) {
+        std::cerr << "No measure times available for pattern: " << patternName << std::endl;
+    }
+
+    double* measureTimes = new double[size];
+
+    rv = WGFMU_getPatternMeasureTimes(patternName, 0, &size, measureTimes);
+
+    if (rv != 0) {
+        std::cerr << "WGFMU_getPatternMeasureTimes Error Code: " << rv << std::endl;
+    }
+
+    std::vector<double> measureTimesVec(size);
+
+    for (int i = 0; i < size; ++i) {
+        measureTimesVec[i] = measureTimes[i];
+    }
+
+    delete[] measureTimes;
+
+    return measureTimesVec;
 }
+
+py::tuple getForceValues(int channelId, double offset) {
+    double valueSize;
+    int rv;
+
+    rv = WGFMU_getForceValueSize(channelId, &valueSize);
+
+    int size = int(valueSize);
+
+    if (rv != 0) {
+        std::cerr << "WGFMU_getForceValueSize Error Code: " << rv << std::endl;
+    }
+
+    std::vector<double> forceTimes(size);
+    std::vector<double> forceValues(size);
+
+
+    rv = WGFMU_getForceValues(channelId, offset, &size, forceTimes.data(), forceValues.data());
+
+    if (rv != 0) {
+        std::cerr << "WGFMU_getForceValues Error Code: " << rv << std::endl;
+    }
+
+    return py::make_tuple(forceTimes, forceValues);
+}
+
+double getInterpolatedForceValue(int channelId, double time) {
+    double forceValue;
+    int rv;
+
+    rv = WGFMU_getInterpolatedForceValue(channelId, time, &forceValue);
+
+    if (rv != 0) {
+        std::cerr << "WGFMU_getInterpolatedForceValue Error Code: " << rv << std::endl;
+    }
+
+    return forceValue;
+}
+
+std::vector<double> getMeasureTimes(int channelId, int offset) {
+    int size;
+    int rv;
+    rv = WGFMU_getMeasureTimeSize(channelId, &size);
+
+    if (rv != 0) {
+        std::cerr << "WGFMU_getMeasureTimeSize Error Code: " << rv << std::endl;
+    }
+
+    if (size <= 0) {
+        std::cerr << "No measure times available for channel ID: " << channelId << std::endl;
+    }
+
+    double* measureTimes = new double[size];
+    rv = WGFMU_getMeasureTimes(channelId, offset, &size, measureTimes);
+
+    if (rv != 0) {
+        std::cerr << "WGFMU_getMeasureTimes Error Code: " << rv << std::endl;
+    }
+
+    std::vector<double> measureTimesVec(size);
+    for (int i = 0; i < size; ++i) {
+        measureTimesVec[i] = measureTimes[i];
+    }
+    delete[] measureTimes;
+
+    return measureTimesVec;
+}
+
+py::tuple getMeasureEvents(int channelId, int measureID) {
+    int size;
+    int rv;
+    rv = WGFMU_getMeasureEventSize(channelId, &size);
+
+    if (rv != 0) {
+        std::cerr << "WGFMU_getMeasureEventSize Error Code: " << rv << std::endl;
+    }
+
+    int stringSize = 512;
+
+    char** ptn = new char*[size];
+    char** evt = new char*[size];
+    for (int i = 0; i < size; ++i) {
+        ptn[i] = new char[stringSize];
+        evt[i] = new char[stringSize];
+    }
+    int* cycles = new int[size];
+    double* loops = new double[size];
+    int* counts = new int[size];
+    int* idxs = new int[size];
+    int* lens = new int[size];
+
+    rv = WGFMU_getMeasureEvents(channelId, measureID, &size, ptn, evt, cycles, loops, counts, idxs, lens);
+
+    if (rv != 0) {
+        std::cerr << "WGFMU_getMeasureEvents Error Code: " << rv << std::endl;
+    }
+
+    std::vector<std::string> patternNames(size);
+    std::vector<std::string> eventNames(size);
+    std::vector<int> cyclesVec(size);
+    std::vector<double> loopsVec(size);
+    std::vector<int> countsVec(size);
+    std::vector<int> idxsVec(size);
+    std::vector<int> lensVec(size);
+
+    for (int i = 0; i < size; ++i) {
+        patternNames[i] = std::string(ptn[i]);
+        eventNames[i] = std::string(evt[i]);
+        cyclesVec[i] = cycles[i];
+        loopsVec[i] = loops[i];
+        countsVec[i] = counts[i];
+        idxsVec[i] = idxs[i];
+        lensVec[i] = lens[i];
+
+        delete[] ptn[i];
+        delete[] evt[i];
+    }
+    delete[] ptn;
+    delete[] evt;
+    delete[] cycles;
+    delete[] loops;
+    delete[] counts;
+    delete[] idxs;
+    delete[] lens;
+
+    return py::make_tuple(patternNames, eventNames, cyclesVec, loopsVec, countsVec, idxsVec, lensVec);
+
+}
+
+py::tuple getMeasureEventAttribute(int channelId, int index) {
+    double time;
+    int measurementPoints;
+    double measurementInterval;
+    double averagingTime;
+    int rawData;
+    int rv;
+
+    rv = WGFMU_getMeasureEventAttribute(channelId, index, &time, &measurementPoints, &measurementInterval, &averagingTime, &rawData);
+
+    return py::make_tuple(time, measurementPoints, measurementInterval, averagingTime, rawData);
+}
+
 int exportAscii(const char* fileName) {
     return WGFMU_exportAscii(fileName);
 }
@@ -274,12 +606,35 @@ int abortabort() {
 int abortChannel(int channelId) {
     return WGFMU_abortChannel(channelId);
 }
-int getStatus(int* status, double* elapsedTime, double* totalTime) {
-    return WGFMU_getStatus(status, elapsedTime, totalTime);
+
+py::tuple getStatus() {
+    int status;
+    double elapsedTime, totalTime;
+    int rv;
+
+    rv = WGFMU_getStatus(&status, &elapsedTime, &totalTime);
+
+    if (rv != 0) {
+        std::cerr << "WGFMU_getStatus Error Code: " << rv << std::endl;
+    }
+
+    return py::make_tuple(status, elapsedTime, totalTime);
+
 }
-int getChannelStatus(int channelId, int* status, double* elapsedTime, double* totalTime) {
-    return WGFMU_getChannelStatus(channelId, status, elapsedTime, totalTime);
+
+py::tuple getChannelStatus(int channelId) {
+    int status;
+    double elapsedTime, totalTime;
+    int rv;
+    rv = WGFMU_getChannelStatus(channelId, &status, &elapsedTime, &totalTime);
+
+    if (rv != 0) {
+        std::cerr << "WGFMU_getChannelStatus Error Code: " << rv << std::endl;
+    }
+
+    return py::make_tuple(status, elapsedTime, totalTime);
 }
+
 int waitUntilCompleted() {
     return WGFMU_waitUntilCompleted();
 }
@@ -288,7 +643,7 @@ py::tuple getMeasureValueSize(int channelId) {
 
     rv = WGFMU_getMeasureValueSize(channelId, &measuredSize, &totalSize);
 
-    return py::make_tuple(rv, measuredSize, totalSize);
+    return py::make_tuple(measuredSize, totalSize);
 }
 
 py::tuple getMeasureValues(int channelId) {
@@ -322,33 +677,66 @@ int getMeasureValue(int channelId, int index, double* measureTime, double* measu
 int getCompletedMeasureEventSize(int channelId, int* measuredSize, int* totalSize) {
     return WGFMU_getCompletedMeasureEventSize(channelId, measuredSize, totalSize);
 }
-int isMeasureEventCompleted(int channelId, const char* patternName, const char* eventName, int cycle, double loop, int count, int* completed, int* index, int* offset, int* size) {
-    return WGFMU_isMeasureEventCompleted(channelId, patternName, eventName, cycle, loop, count, completed, index, offset, size);
+
+py::tuple isMeasureEventCompleted(int channelId, const char* patternName, const char* eventName, int cycle, double loop, int count) {
+    int completed, index, offset, size;
+    int rv;
+    rv = WGFMU_isMeasureEventCompleted(channelId, patternName, eventName, cycle, loop, count, &completed, &index, &offset, &size);
+
+    if (rv != 0) {
+        std::cerr << "WGFMU_isMeasureEventCompleted Error Code: " << rv << std::endl;
+    }
+
+
+    return py::make_tuple(completed, index, offset, size);
 }
+
 int dcforceVoltage(int channelId, double voltage) {
     return WGFMU_dcforceVoltage(channelId, voltage);
 }
-int dcmeasureValue(int channelId) {
+
+double dcmeasureValue(int channelId) {
     double value;
     WGFMU_dcmeasureValue(channelId, &value);
     return value;
 }
-int dcmeasureAveragedValue(int channelId, int count, int interval) {
+
+double dcmeasureAveragedValue(int channelId, int count, int interval) {
     double value;
     WGFMU_dcmeasureAveragedValue(channelId, count, interval, &value);
     return value;
 }
 
+enum OPERATION_MODE {
+    DC = 2000,
+    FAST_IV = 2001,
+    PG = 2002,
+    SMU = 2003
+};
+
+enum FORCE_VOLTAGE_RANGE {
+    AUTO = 3000,
+    _3V = 3001,
+    _5V = 3002,
+    _10V_NEGATIVE = 3003,
+    _10V_POSITIVE = 3004
+};
+
+enum MEASURE_MODE {
+    VOLTAGE = 4000,
+    CURRENT = 4001
+};
+
+enum MEASURE_EVENT_DATA {
+    AVERAGED = 12000,
+    RAW = 12001,
+};
+
 PYBIND11_MODULE(WGFMUpy, m) {
 
     m.def("openSession", &openSession, R"pbdoc(
-        openSession wgfmu
-
-        parameters
-        ----------
-        address : str
-            The address of the device to connect to.
-    )pbdoc");
+                openSession wgfmu
+        )pbdoc");
     m.def("closeSession", &closeSession, R"pbdoc(
                 closeSession wgfmu
         )pbdoc");
@@ -364,20 +752,11 @@ PYBIND11_MODULE(WGFMUpy, m) {
     m.def("doSelfTest", &doSelfTest, R"pbdoc(
                 doSelfTest wgfmu
         )pbdoc");
-    m.def("getChannelIdSize", &getChannelIdSize, R"pbdoc(
-                getChannelIdSize wgfmu
-        )pbdoc");
     m.def("getChannelIds", &getChannelIds, R"pbdoc(
                 getChannelIds wgfmu
         )pbdoc");
-    m.def("getErrorSize", &getErrorSize, R"pbdoc(
-                getErrorSize wgfmu
-        )pbdoc");
     m.def("getError", &getError, R"pbdoc(
                 getError wgfmu
-        )pbdoc");
-    m.def("getErrorSummarySize", &getErrorSummarySize, R"pbdoc(
-                getErrorSummarySize wgfmu
         )pbdoc");
     m.def("getErrorSummary", &getErrorSummary, R"pbdoc(
                 getErrorSummary wgfmu
@@ -390,9 +769,6 @@ PYBIND11_MODULE(WGFMUpy, m) {
         )pbdoc");
     m.def("getWarningLevel", &getWarningLevel, R"pbdoc(
                 getWarningLevel wgfmu
-        )pbdoc");
-    m.def("getWarningSummarySize", &getWarningSummarySize, R"pbdoc(
-                getWarningSummarySize wgfmu
         )pbdoc");
     m.def("getWarningSummary", &getWarningSummary, R"pbdoc(
                 getWarningSummary wgfmu
@@ -505,56 +881,26 @@ PYBIND11_MODULE(WGFMUpy, m) {
     m.def("addSequences", &addSequences, R"pbdoc(
                 addSequences wgfmu
         )pbdoc");
-    m.def("getPatternForceValueSize", &getPatternForceValueSize, R"pbdoc(
-                getPatternForceValueSize wgfmu
-        )pbdoc");
     m.def("getPatternForceValues", &getPatternForceValues, R"pbdoc(
                 getPatternForceValues wgfmu
-        )pbdoc");
-    m.def("getPatternForceValue", &getPatternForceValue, R"pbdoc(
-                getPatternForceValue wgfmu
         )pbdoc");
     m.def("getPatternInterpolatedForceValue", &getPatternInterpolatedForceValue, R"pbdoc(
                 getPatternInterpolatedForceValue wgfmu
         )pbdoc");
-    m.def("getPatternMeasureTimeSize", &getPatternMeasureTimeSize, R"pbdoc(
-                getPatternMeasureTimeSize wgfmu
-        )pbdoc");
     m.def("getPatternMeasureTimes", &getPatternMeasureTimes, R"pbdoc(
                 getPatternMeasureTimes wgfmu
-        )pbdoc");
-    m.def("getPatternMeasureTime", &getPatternMeasureTime, R"pbdoc(
-                getPatternMeasureTime wgfmu
-        )pbdoc");
-    m.def("getForceValueSize", &getForceValueSize, R"pbdoc(
-                getForceValueSize wgfmu
         )pbdoc");
     m.def("getForceValues", &getForceValues, R"pbdoc(
                 getForceValues wgfmu
         )pbdoc");
-    m.def("getForceValue", &getForceValue, R"pbdoc(
-                getForceValue wgfmu
-        )pbdoc");
     m.def("getInterpolatedForceValue", &getInterpolatedForceValue, R"pbdoc(
                 getInterpolatedForceValue wgfmu
-        )pbdoc");
-    m.def("getMeasureTimeSize", &getMeasureTimeSize, R"pbdoc(
-                getMeasureTimeSize wgfmu
         )pbdoc");
     m.def("getMeasureTimes", &getMeasureTimes, R"pbdoc(
                 getMeasureTimes wgfmu
         )pbdoc");
-    m.def("getMeasureTime", &getMeasureTime, R"pbdoc(
-                getMeasureTime wgfmu
-        )pbdoc");
-    m.def("getMeasureEventSize", &getMeasureEventSize, R"pbdoc(
-                getMeasureEventSize wgfmu
-        )pbdoc");
     m.def("getMeasureEvents", &getMeasureEvents, R"pbdoc(
                 getMeasureEvents wgfmu
-        )pbdoc");
-    m.def("getMeasureEvent", &getMeasureEvent, R"pbdoc(
-                getMeasureEvent wgfmu
         )pbdoc");
     m.def("getMeasureEventAttribute", &getMeasureEventAttribute, R"pbdoc(
                 getMeasureEventAttribute wgfmu
@@ -630,34 +976,44 @@ PYBIND11_MODULE(WGFMUpy, m) {
 	m.attr("WGFMU_ERROR_CODE_MIN") = py::cast(WGFMU_ERROR_CODE_MIN);
 	m.attr("WGFMU_PASS") = py::cast(WGFMU_PASS);
 	m.attr("WGFMU_FAIL") = py::cast(WGFMU_FAIL);
+
 	m.attr("WGFMU_WARNING_LEVEL_OFFSET") = py::cast(WGFMU_WARNING_LEVEL_OFFSET);
 	m.attr("WGFMU_WARNING_LEVEL_OFF") = py::cast(WGFMU_WARNING_LEVEL_OFF);
 	m.attr("WGFMU_WARNING_LEVEL_SEVERE") = py::cast(WGFMU_WARNING_LEVEL_SEVERE);
 	m.attr("WGFMU_WARNING_LEVEL_NORMAL") = py::cast(WGFMU_WARNING_LEVEL_NORMAL);
 	m.attr("WGFMU_WARNING_LEVEL_INFORMATION") = py::cast(WGFMU_WARNING_LEVEL_INFORMATION);
-	m.attr("WGFMU_OPERATION_MODE_OFFSET") = py::cast(WGFMU_OPERATION_MODE_OFFSET);
-	m.attr("WGFMU_OPERATION_MODE_DC") = py::cast(WGFMU_OPERATION_MODE_DC);
-	m.attr("WGFMU_OPERATION_MODE_FASTIV") = py::cast(WGFMU_OPERATION_MODE_FASTIV);
-	m.attr("WGFMU_OPERATION_MODE_PG") = py::cast(WGFMU_OPERATION_MODE_PG);
-	m.attr("WGFMU_OPERATION_MODE_SMU") = py::cast(WGFMU_OPERATION_MODE_SMU);
-	m.attr("WGFMU_FORCE_VOLTAGE_RANGE_OFFSET") = py::cast(WGFMU_FORCE_VOLTAGE_RANGE_OFFSET);
-	m.attr("WGFMU_FORCE_VOLTAGE_RANGE_AUTO") = py::cast(WGFMU_FORCE_VOLTAGE_RANGE_AUTO);
-	m.attr("WGFMU_FORCE_VOLTAGE_RANGE_3V") = py::cast(WGFMU_FORCE_VOLTAGE_RANGE_3V);
-	m.attr("WGFMU_FORCE_VOLTAGE_RANGE_5V") = py::cast(WGFMU_FORCE_VOLTAGE_RANGE_5V);
-	m.attr("WGFMU_FORCE_VOLTAGE_RANGE_10V_NEGATIVE") = py::cast(WGFMU_FORCE_VOLTAGE_RANGE_10V_NEGATIVE);
-	m.attr("WGFMU_FORCE_VOLTAGE_RANGE_10V_POSITIVE") = py::cast(WGFMU_FORCE_VOLTAGE_RANGE_10V_POSITIVE);
-	m.attr("WGFMU_MEASURE_MODE_OFFSET") = py::cast(WGFMU_MEASURE_MODE_OFFSET);
-	m.attr("WGFMU_MEASURE_MODE_VOLTAGE") = py::cast(WGFMU_MEASURE_MODE_VOLTAGE);
-	m.attr("WGFMU_MEASURE_MODE_CURRENT") = py::cast(WGFMU_MEASURE_MODE_CURRENT);
+
+    py::enum_<OPERATION_MODE>(m, "OPERATION_MODE")
+        .value("DC", OPERATION_MODE::DC)
+        .value("FASTIV", OPERATION_MODE::FAST_IV)
+        .value("PG", OPERATION_MODE::PG)
+        .value("SMU", OPERATION_MODE::SMU)
+        .export_values();
+
+    py::enum_<FORCE_VOLTAGE_RANGE>(m, "FORCE_VOLTAGE_RANGE")
+        .value("AUTO", FORCE_VOLTAGE_RANGE::AUTO)
+        .value("3V", FORCE_VOLTAGE_RANGE::_3V)
+        .value("5V", FORCE_VOLTAGE_RANGE::_5V)
+        .value("10V_NEGATIVE", FORCE_VOLTAGE_RANGE::_10V_NEGATIVE)
+        .value("10V_POSITIVE", FORCE_VOLTAGE_RANGE::_10V_POSITIVE)
+        .export_values();
+
+    py::enum_<MEASURE_MODE>(m, "MEASURE_MODE")
+        .value("VOLTAGE", MEASURE_MODE::VOLTAGE)
+        .value("CURRENT", MEASURE_MODE::CURRENT)
+        .export_values();
+
 	m.attr("WGFMU_MEASURE_VOLTAGE_RANGE_OFFSET") = py::cast(WGFMU_MEASURE_VOLTAGE_RANGE_OFFSET);
 	m.attr("WGFMU_MEASURE_VOLTAGE_RANGE_5V") = py::cast(WGFMU_MEASURE_VOLTAGE_RANGE_5V);
 	m.attr("WGFMU_MEASURE_VOLTAGE_RANGE_10V") = py::cast(WGFMU_MEASURE_VOLTAGE_RANGE_10V);
+
 	m.attr("WGFMU_MEASURE_CURRENT_RANGE_OFFSET") = py::cast(WGFMU_MEASURE_CURRENT_RANGE_OFFSET);
 	m.attr("WGFMU_MEASURE_CURRENT_RANGE_1UA") = py::cast(WGFMU_MEASURE_CURRENT_RANGE_1UA);
 	m.attr("WGFMU_MEASURE_CURRENT_RANGE_10UA") = py::cast(WGFMU_MEASURE_CURRENT_RANGE_10UA);
 	m.attr("WGFMU_MEASURE_CURRENT_RANGE_100UA") = py::cast(WGFMU_MEASURE_CURRENT_RANGE_100UA);
 	m.attr("WGFMU_MEASURE_CURRENT_RANGE_1MA") = py::cast(WGFMU_MEASURE_CURRENT_RANGE_1MA);
 	m.attr("WGFMU_MEASURE_CURRENT_RANGE_10MA") = py::cast(WGFMU_MEASURE_CURRENT_RANGE_10MA);
+
 	m.attr("WGFMU_MEASURE_ENABLED_OFFSET") = py::cast(WGFMU_MEASURE_ENABLED_OFFSET);
 	m.attr("WGFMU_MEASURE_ENABLED_DISABLE") = py::cast(WGFMU_MEASURE_ENABLED_DISABLE);
 	m.attr("WGFMU_MEASURE_ENABLED_ENABLE") = py::cast(WGFMU_MEASURE_ENABLED_ENABLE);
@@ -667,12 +1023,15 @@ PYBIND11_MODULE(WGFMUpy, m) {
 	m.attr("WGFMU_TRIGGER_OUT_MODE_START_SEQUENCE") = py::cast(WGFMU_TRIGGER_OUT_MODE_START_SEQUENCE);
 	m.attr("WGFMU_TRIGGER_OUT_MODE_START_PATTERN") = py::cast(WGFMU_TRIGGER_OUT_MODE_START_PATTERN);
 	m.attr("WGFMU_TRIGGER_OUT_MODE_EVENT") = py::cast(WGFMU_TRIGGER_OUT_MODE_EVENT);
+
 	m.attr("WGFMU_TRIGGER_OUT_POLARITY_OFFSET") = py::cast(WGFMU_TRIGGER_OUT_POLARITY_OFFSET);
 	m.attr("WGFMU_TRIGGER_OUT_POLARITY_POSITIVE") = py::cast(WGFMU_TRIGGER_OUT_POLARITY_POSITIVE);
 	m.attr("WGFMU_TRIGGER_OUT_POLARITY_NEGATIVE") = py::cast(WGFMU_TRIGGER_OUT_POLARITY_NEGATIVE);
+
 	m.attr("WGFMU_AXIS_OFFSET") = py::cast(WGFMU_AXIS_OFFSET);
 	m.attr("WGFMU_AXIS_TIME") = py::cast(WGFMU_AXIS_TIME);
 	m.attr("WGFMU_AXIS_VOLTAGE") = py::cast(WGFMU_AXIS_VOLTAGE);
+
 	m.attr("WGFMU_STATUS_OFFSET") = py::cast(WGFMU_STATUS_OFFSET);
 	m.attr("WGFMU_STATUS_COMPLETED") = py::cast(WGFMU_STATUS_COMPLETED);
 	m.attr("WGFMU_STATUS_DONE") = py::cast(WGFMU_STATUS_DONE);
@@ -681,12 +1040,16 @@ PYBIND11_MODULE(WGFMUpy, m) {
 	m.attr("WGFMU_STATUS_ABORTED") = py::cast(WGFMU_STATUS_ABORTED);
 	m.attr("WGFMU_STATUS_RUNNING_ILLEGAL") = py::cast(WGFMU_STATUS_RUNNING_ILLEGAL);
 	m.attr("WGFMU_STATUS_IDLE") = py::cast(WGFMU_STATUS_IDLE);
+
 	m.attr("WGFMU_MEASURE_EVENT_OFFSET") = py::cast(WGFMU_MEASURE_EVENT_OFFSET);
 	m.attr("WGFMU_MEASURE_EVENT_NOT_COMPLETED") = py::cast(WGFMU_MEASURE_EVENT_NOT_COMPLETED);
 	m.attr("WGFMU_MEASURE_EVENT_COMPLETED") = py::cast(WGFMU_MEASURE_EVENT_COMPLETED);
-	m.attr("WGFMU_MEASURE_EVENT_DATA_OFFSET") = py::cast(WGFMU_MEASURE_EVENT_DATA_OFFSET);
-	m.attr("WGFMU_MEASURE_EVENT_DATA_AVERAGED") = py::cast(WGFMU_MEASURE_EVENT_DATA_AVERAGED);
-	m.attr("WGFMU_MEASURE_EVENT_DATA_RAW") = py::cast(WGFMU_MEASURE_EVENT_DATA_RAW);
+
+    py::enum_<MEASURE_EVENT_DATA>(m, "MEASURE_EVENT_DATA")
+        .value("AVERAGED", MEASURE_EVENT_DATA::AVERAGED)
+        .value("RAW", MEASURE_EVENT_DATA::RAW)
+        .export_values();
+        
 #ifdef VERSION_INFO
     m.attr("__version__") = VERSION_INFO;
 #else
