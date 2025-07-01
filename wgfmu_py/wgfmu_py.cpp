@@ -328,18 +328,27 @@ int isMeasureEventCompleted(int channelId, const char* patternName, const char* 
 int dcforceVoltage(int channelId, double voltage) {
     return WGFMU_dcforceVoltage(channelId, voltage);
 }
-int dcmeasureValue(int channelId, double* value) {
-    return WGFMU_dcmeasureValue(channelId, value);
+int dcmeasureValue(int channelId) {
+    double value;
+    WGFMU_dcmeasureValue(channelId, &value);
+    return value;
 }
-int dcmeasureAveragedValue(int channelId, int count, int interval, double* value) {
-    return WGFMU_dcmeasureAveragedValue(channelId, count, interval, value);
+int dcmeasureAveragedValue(int channelId, int count, int interval) {
+    double value;
+    WGFMU_dcmeasureAveragedValue(channelId, count, interval, &value);
+    return value;
 }
 
 PYBIND11_MODULE(WGFMUpy, m) {
 
     m.def("openSession", &openSession, R"pbdoc(
-                openSession wgfmu
-        )pbdoc");
+        openSession wgfmu
+
+        parameters
+        ----------
+        address : str
+            The address of the device to connect to.
+    )pbdoc");
     m.def("closeSession", &closeSession, R"pbdoc(
                 closeSession wgfmu
         )pbdoc");
@@ -601,7 +610,83 @@ PYBIND11_MODULE(WGFMUpy, m) {
     m.def("dcmeasureAveragedValue", &dcmeasureAveragedValue, R"pbdoc(
                 dcmeasureAveragedValue wgfmu
         )pbdoc");
-    
+
+    m.attr("WGFMU_NO_ERROR") = py::cast(WGFMU_NO_ERROR);
+	m.attr("WGFMU_PARAMETER_OUT_OF_RANGE_ERROR") = py::cast(WGFMU_PARAMETER_OUT_OF_RANGE_ERROR);
+	m.attr("WGFMU_ILLEGAL_STRING_ERROR") = py::cast(WGFMU_ILLEGAL_STRING_ERROR);
+	m.attr("WGFMU_CONTEXT_ERROR") = py::cast(WGFMU_CONTEXT_ERROR);
+	m.attr("WGFMU_FUNCTION_NOT_SUPPORTED_ERROR") = py::cast(WGFMU_FUNCTION_NOT_SUPPORTED_ERROR);
+	m.attr("WGFMU_COMMUNICATION_ERROR") = py::cast(WGFMU_COMMUNICATION_ERROR);
+	m.attr("WGFMU_FW_ERROR") = py::cast(WGFMU_FW_ERROR);
+	m.attr("WGFMU_LIBRARY_ERROR") = py::cast(WGFMU_LIBRARY_ERROR);
+	m.attr("WGFMU_ERROR") = py::cast(WGFMU_ERROR);
+	m.attr("WGFMU_CHANNEL_NOT_FOUND_ERROR") = py::cast(WGFMU_CHANNEL_NOT_FOUND_ERROR);
+	m.attr("WGFMU_PATTERN_NOT_FOUND_ERROR") = py::cast(WGFMU_PATTERN_NOT_FOUND_ERROR);
+	m.attr("WGFMU_EVENT_NOT_FOUND_ERROR") = py::cast(WGFMU_EVENT_NOT_FOUND_ERROR);
+	m.attr("WGFMU_PATTERN_ALREADY_EXISTS_ERROR") = py::cast(WGFMU_PATTERN_ALREADY_EXISTS_ERROR);
+	m.attr("WGFMU_SEQUENCER_NOT_RUNNING_ERROR") = py::cast(WGFMU_SEQUENCER_NOT_RUNNING_ERROR);
+	m.attr("WGFMU_RESULT_NOT_READY_ERROR") = py::cast(WGFMU_RESULT_NOT_READY_ERROR);
+	m.attr("WGFMU_RESULT_OUT_OF_DATE") = py::cast(WGFMU_RESULT_OUT_OF_DATE);
+	m.attr("WGFMU_ERROR_CODE_MIN") = py::cast(WGFMU_ERROR_CODE_MIN);
+	m.attr("WGFMU_PASS") = py::cast(WGFMU_PASS);
+	m.attr("WGFMU_FAIL") = py::cast(WGFMU_FAIL);
+	m.attr("WGFMU_WARNING_LEVEL_OFFSET") = py::cast(WGFMU_WARNING_LEVEL_OFFSET);
+	m.attr("WGFMU_WARNING_LEVEL_OFF") = py::cast(WGFMU_WARNING_LEVEL_OFF);
+	m.attr("WGFMU_WARNING_LEVEL_SEVERE") = py::cast(WGFMU_WARNING_LEVEL_SEVERE);
+	m.attr("WGFMU_WARNING_LEVEL_NORMAL") = py::cast(WGFMU_WARNING_LEVEL_NORMAL);
+	m.attr("WGFMU_WARNING_LEVEL_INFORMATION") = py::cast(WGFMU_WARNING_LEVEL_INFORMATION);
+	m.attr("WGFMU_OPERATION_MODE_OFFSET") = py::cast(WGFMU_OPERATION_MODE_OFFSET);
+	m.attr("WGFMU_OPERATION_MODE_DC") = py::cast(WGFMU_OPERATION_MODE_DC);
+	m.attr("WGFMU_OPERATION_MODE_FASTIV") = py::cast(WGFMU_OPERATION_MODE_FASTIV);
+	m.attr("WGFMU_OPERATION_MODE_PG") = py::cast(WGFMU_OPERATION_MODE_PG);
+	m.attr("WGFMU_OPERATION_MODE_SMU") = py::cast(WGFMU_OPERATION_MODE_SMU);
+	m.attr("WGFMU_FORCE_VOLTAGE_RANGE_OFFSET") = py::cast(WGFMU_FORCE_VOLTAGE_RANGE_OFFSET);
+	m.attr("WGFMU_FORCE_VOLTAGE_RANGE_AUTO") = py::cast(WGFMU_FORCE_VOLTAGE_RANGE_AUTO);
+	m.attr("WGFMU_FORCE_VOLTAGE_RANGE_3V") = py::cast(WGFMU_FORCE_VOLTAGE_RANGE_3V);
+	m.attr("WGFMU_FORCE_VOLTAGE_RANGE_5V") = py::cast(WGFMU_FORCE_VOLTAGE_RANGE_5V);
+	m.attr("WGFMU_FORCE_VOLTAGE_RANGE_10V_NEGATIVE") = py::cast(WGFMU_FORCE_VOLTAGE_RANGE_10V_NEGATIVE);
+	m.attr("WGFMU_FORCE_VOLTAGE_RANGE_10V_POSITIVE") = py::cast(WGFMU_FORCE_VOLTAGE_RANGE_10V_POSITIVE);
+	m.attr("WGFMU_MEASURE_MODE_OFFSET") = py::cast(WGFMU_MEASURE_MODE_OFFSET);
+	m.attr("WGFMU_MEASURE_MODE_VOLTAGE") = py::cast(WGFMU_MEASURE_MODE_VOLTAGE);
+	m.attr("WGFMU_MEASURE_MODE_CURRENT") = py::cast(WGFMU_MEASURE_MODE_CURRENT);
+	m.attr("WGFMU_MEASURE_VOLTAGE_RANGE_OFFSET") = py::cast(WGFMU_MEASURE_VOLTAGE_RANGE_OFFSET);
+	m.attr("WGFMU_MEASURE_VOLTAGE_RANGE_5V") = py::cast(WGFMU_MEASURE_VOLTAGE_RANGE_5V);
+	m.attr("WGFMU_MEASURE_VOLTAGE_RANGE_10V") = py::cast(WGFMU_MEASURE_VOLTAGE_RANGE_10V);
+	m.attr("WGFMU_MEASURE_CURRENT_RANGE_OFFSET") = py::cast(WGFMU_MEASURE_CURRENT_RANGE_OFFSET);
+	m.attr("WGFMU_MEASURE_CURRENT_RANGE_1UA") = py::cast(WGFMU_MEASURE_CURRENT_RANGE_1UA);
+	m.attr("WGFMU_MEASURE_CURRENT_RANGE_10UA") = py::cast(WGFMU_MEASURE_CURRENT_RANGE_10UA);
+	m.attr("WGFMU_MEASURE_CURRENT_RANGE_100UA") = py::cast(WGFMU_MEASURE_CURRENT_RANGE_100UA);
+	m.attr("WGFMU_MEASURE_CURRENT_RANGE_1MA") = py::cast(WGFMU_MEASURE_CURRENT_RANGE_1MA);
+	m.attr("WGFMU_MEASURE_CURRENT_RANGE_10MA") = py::cast(WGFMU_MEASURE_CURRENT_RANGE_10MA);
+	m.attr("WGFMU_MEASURE_ENABLED_OFFSET") = py::cast(WGFMU_MEASURE_ENABLED_OFFSET);
+	m.attr("WGFMU_MEASURE_ENABLED_DISABLE") = py::cast(WGFMU_MEASURE_ENABLED_DISABLE);
+	m.attr("WGFMU_MEASURE_ENABLED_ENABLE") = py::cast(WGFMU_MEASURE_ENABLED_ENABLE);
+	m.attr("WGFMU_TRIGGER_OUT_MODE_OFFSET") = py::cast(WGFMU_TRIGGER_OUT_MODE_OFFSET);
+	m.attr("WGFMU_TRIGGER_OUT_MODE_DISABLE") = py::cast(WGFMU_TRIGGER_OUT_MODE_DISABLE);
+	m.attr("WGFMU_TRIGGER_OUT_MODE_START_EXECUTION") = py::cast(WGFMU_TRIGGER_OUT_MODE_START_EXECUTION);
+	m.attr("WGFMU_TRIGGER_OUT_MODE_START_SEQUENCE") = py::cast(WGFMU_TRIGGER_OUT_MODE_START_SEQUENCE);
+	m.attr("WGFMU_TRIGGER_OUT_MODE_START_PATTERN") = py::cast(WGFMU_TRIGGER_OUT_MODE_START_PATTERN);
+	m.attr("WGFMU_TRIGGER_OUT_MODE_EVENT") = py::cast(WGFMU_TRIGGER_OUT_MODE_EVENT);
+	m.attr("WGFMU_TRIGGER_OUT_POLARITY_OFFSET") = py::cast(WGFMU_TRIGGER_OUT_POLARITY_OFFSET);
+	m.attr("WGFMU_TRIGGER_OUT_POLARITY_POSITIVE") = py::cast(WGFMU_TRIGGER_OUT_POLARITY_POSITIVE);
+	m.attr("WGFMU_TRIGGER_OUT_POLARITY_NEGATIVE") = py::cast(WGFMU_TRIGGER_OUT_POLARITY_NEGATIVE);
+	m.attr("WGFMU_AXIS_OFFSET") = py::cast(WGFMU_AXIS_OFFSET);
+	m.attr("WGFMU_AXIS_TIME") = py::cast(WGFMU_AXIS_TIME);
+	m.attr("WGFMU_AXIS_VOLTAGE") = py::cast(WGFMU_AXIS_VOLTAGE);
+	m.attr("WGFMU_STATUS_OFFSET") = py::cast(WGFMU_STATUS_OFFSET);
+	m.attr("WGFMU_STATUS_COMPLETED") = py::cast(WGFMU_STATUS_COMPLETED);
+	m.attr("WGFMU_STATUS_DONE") = py::cast(WGFMU_STATUS_DONE);
+	m.attr("WGFMU_STATUS_RUNNING") = py::cast(WGFMU_STATUS_RUNNING);
+	m.attr("WGFMU_STATUS_ABORT_COMPLETED") = py::cast(WGFMU_STATUS_ABORT_COMPLETED);
+	m.attr("WGFMU_STATUS_ABORTED") = py::cast(WGFMU_STATUS_ABORTED);
+	m.attr("WGFMU_STATUS_RUNNING_ILLEGAL") = py::cast(WGFMU_STATUS_RUNNING_ILLEGAL);
+	m.attr("WGFMU_STATUS_IDLE") = py::cast(WGFMU_STATUS_IDLE);
+	m.attr("WGFMU_MEASURE_EVENT_OFFSET") = py::cast(WGFMU_MEASURE_EVENT_OFFSET);
+	m.attr("WGFMU_MEASURE_EVENT_NOT_COMPLETED") = py::cast(WGFMU_MEASURE_EVENT_NOT_COMPLETED);
+	m.attr("WGFMU_MEASURE_EVENT_COMPLETED") = py::cast(WGFMU_MEASURE_EVENT_COMPLETED);
+	m.attr("WGFMU_MEASURE_EVENT_DATA_OFFSET") = py::cast(WGFMU_MEASURE_EVENT_DATA_OFFSET);
+	m.attr("WGFMU_MEASURE_EVENT_DATA_AVERAGED") = py::cast(WGFMU_MEASURE_EVENT_DATA_AVERAGED);
+	m.attr("WGFMU_MEASURE_EVENT_DATA_RAW") = py::cast(WGFMU_MEASURE_EVENT_DATA_RAW);
 #ifdef VERSION_INFO
     m.attr("__version__") = VERSION_INFO;
 #else
