@@ -33,7 +33,7 @@ py::tuple doSelfTest() {
 
     int ret_code = WGFMU_doSelfTest(&result, detail.data(), &size);
 
-    // Convert char* buffer to std::string (ensure it’s null-terminated)
+    // Convert char* buffer to std::string (ensure itï¿½s null-terminated)
     std::string detail_str(detail.data(), strnlen(detail.data(), size));
 
     return py::make_tuple(ret_code, result, detail_str, size);
@@ -186,10 +186,6 @@ int addSequences(int channelId, const std::vector<std::string> patternNames, dou
         cstrs2.push_back(const_cast<const char*>(str.c_str()));
     }
 
-    // Optional: Add a nullptr terminator if the API expects a null-terminated list
-    // cstrs.push_back(nullptr);
-
-    // Get the char** pointer
     const char** d_patternNames = cstrs2.data();
     return WGFMU_addSequences(channelId, d_patternNames, loopCounts, size);
 }
@@ -244,10 +240,6 @@ int getMeasureEvents(int channelId, int offset, int* size, std::vector<std::stri
         cstrs.push_back(const_cast<char*>(str.c_str()));
     }
 
-    // Optional: Add a nullptr terminator if the API expects a null-terminated list
-    // cstrs.push_back(nullptr);
-
-    // Get the char** pointer
     char** d_eventNames = cstrs.data();
 
     std::vector<char*> cstrs2;
@@ -255,10 +247,6 @@ int getMeasureEvents(int channelId, int offset, int* size, std::vector<std::stri
         cstrs2.push_back(const_cast<char*>(str.c_str()));
     }
 
-    // Optional: Add a nullptr terminator if the API expects a null-terminated list
-    // cstrs.push_back(nullptr);
-
-    // Get the char** pointer
     char** d_patternNames = cstrs2.data();
     return WGFMU_getMeasureEvents(channelId, offset, size, d_patternNames, d_eventNames, cycles, loops, counts, offsets, sizes);
 }
@@ -326,11 +314,7 @@ py::tuple getMeasureValues(int channelId) {
         std::cerr << "WGFMU_getMeasureValues Error Code: " << rv << std::endl;
     }
 
-    
-
     return py::make_tuple(measureTimes, measureValues);
-    
-
 }
 int getMeasureValue(int channelId, int index, double* measureTime, double* measureValue) {
     return WGFMU_getMeasureValue(channelId, index, measureTime, measureValue);
