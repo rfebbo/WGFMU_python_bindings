@@ -46,3 +46,28 @@ This produces `WGFMUpy.pyd`. Rather than copying it into site-packages by hand, 
 `pip install .` path above — pip installs the module into the correct location and manages
 it. A hand-copied `.pyd` placed elsewhere on `sys.path` (e.g. the stdlib `Lib\` folder) can
 shadow the pip-installed one and load a stale build, so avoid manual copies.
+
+## Maintaining the type stub (`WGFMUpy.pyi`)
+
+The rich docstrings/signatures live in `WGFMUpy.pyi` (a PEP 561 stub), and `setup.py`
+installs it next to the compiled module so editors and type-checkers pick it up. The stub
+is **hand-written**, so it can drift from the actual bindings if you change `wgfmu_py.cpp`
+without updating it (that's how a few signatures/enum names got out of sync historically).
+
+The runtime docstrings (`help(WGFMUpy.foo)`) come from the terse `R"pbdoc(...)"` strings in
+`wgfmu_py.cpp` — the good prose is only in the stub.
+
+To keep them in sync, treat the compiled module as the source of truth for **signatures**
+and regenerate a reference stub with [`pybind11-stubgen`](https://github.com/sizmailov/pybind11-stubgen):
+
+    pip install pybind11-stubgen
+    pip install .                         # build/install the current bindings
+    pybind11-stubgen WGFMUpy -o _stubcheck # generates _stubcheck/WGFMUpy.pyi from the module
+
+then diff `_stubcheck/WGFMUpy.pyi` against `WGFMUpy.pyi` — any signature/enum-name
+difference is drift to reconcile. (The generated stub won't have the hand-written prose, so
+use it to check signatures, not to replace the maintained stub.)
+
+For full auto-sync you could instead move the docstrings into the C++ `pbdoc` strings and
+let `pybind11-stubgen` generate the whole `.pyi` — that makes the `.cpp` the single source
+of truth (`help()` works too), at the cost of a one-time prose migration.

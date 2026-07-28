@@ -51,4 +51,10 @@ setup(
     ext_modules=ext_modules,
     cmdclass={"build_ext": build_ext},
     python_requires=">=3.8",
+    # Ship the type stub next to the compiled module so IDEs / type checkers pick it up.
+    # WGFMUpy is a single top-level extension (not a package), so there is no package to
+    # attach package_data to; installing WGFMUpy.pyi via the wheel's data scheme drops it
+    # into <prefix>\Lib\site-packages next to WGFMUpy.pyd. (Windows layout, which is all
+    # this lib targets.)
+    data_files=[("Lib/site-packages", ["WGFMUpy.pyi"])],
 )

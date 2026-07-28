@@ -122,7 +122,7 @@ def addVector(pattern: str, dTime: float, voltage: float) -> int:
     pass
 
 
-def addVectors(pattern: str, dTime: list[float], voltage: list[float], size: int) -> int:
+def addVectors(pattern: str, dTime: list[float], voltage: list[float]) -> int:
     """
     This function specifies multiple scalar data by using dTime and voltage, and
     connects them to the last point of the specified waveform pattern in the array
@@ -136,20 +136,18 @@ def addVectors(pattern: str, dTime: list[float], voltage: list[float], size: int
         A list of incremental time values in seconds (10^-8 to 10995.11627775 seconds).
     voltage : list[float]
         A list of output voltages in volts (within the range specified in Table 4-2).
-    size : int
-        The number of elements in the dTime and voltage lists.
 
     returns
     -------
     int
         The error code returned by the WGFMU library, where 0 indicates success.
-    
+
     example
     -------
     ptn = "Pattern2"
     dts = [0.01, 0.01, 0.03, 0.01, 0.03]  # in seconds
     vts = [0, -5, -5, 5, 5]  # in volts
-    addVectors(ptn, dts, vts, len(dts))
+    addVectors(ptn, dts, vts)
     """
     pass
 
@@ -576,17 +574,17 @@ def getForceDelay(channel: int) -> float:
     pass
 
 
-def getForceValues(channel: int, index: int) -> tuple[list[float], list[float]]:
+def getForceValues(channel: int, offset: float) -> tuple[list[float], list[float]]:
     """
     This function specifies a channel and a range of sequence data, and returns the
     corresponding setup data (time and voltage). To know the total number of setup
     data, execute the `getForceValueSize` function.
-    
+
     parameters
     ----------
     channel : int
         The channel number (101 to 1002).
-    index : int
+    offset : float
         The first index of the sequence data to read setup (0 to total number of setup data - 1).
 
     returns
@@ -766,34 +764,28 @@ def getMeasureMode(channel: int) -> int:
     """
     pass
 
-def getMeasureTimes(channel: int, index: int, length: int) -> tuple[list[float], int]:
+def getMeasureTimes(channel: int, offset: int) -> list[float]:
     """
-    This function specifies a channel and a range of measurement points, and returns the
-    measurement start time for the points. To know the total number of measurement points,
-    execute the `getMeasureTimeSize` function.
+    This function specifies a channel and a start index, and returns the measurement start
+    times for the measurement points from that index onward. To know the total number of
+    measurement points, execute the `getMeasureTimeSize` function.
 
     parameters
     ----------
     channel : int
         The channel number (101 to 1002).
-    index : int
+    offset : int
         The first index of the measurement points to read the measurement start time.
-    length : int
-        The number of measurement points to read the measurement start time.
 
     returns
     -------
-    tuple[list[float], int]
-        A tuple containing:
-        - list[float]: A list of measurement start times in seconds.
-        - int: The actual number of measurement times returned.
-    
+    list[float]
+        A list of measurement start times in seconds.
+
     example
     -------
     chId = 101
-    idx = 0
-    len = 5
-    mTimes, actualLen = getMeasureTimes(chId, idx, len)
+    mTimes = getMeasureTimes(chId, 0)
     """
     pass
 
@@ -814,7 +806,7 @@ def getMeasureValues(channel: int, index: int) -> tuple[list[float], list[float]
 
     returns
     -------
-    tuple[list[float], list[float], int]
+    tuple[list[float], list[float]]
         A tuple containing:
         - list[float]: A list of measurement start times in seconds.
         - list[float]: A list of measured values in volts or amperes.
@@ -824,6 +816,46 @@ def getMeasureValues(channel: int, index: int) -> tuple[list[float], list[float]
     chId = 101
     idx = 0
     mTimes, mValues = getMeasureValues(chId, idx)
+    """
+    pass
+
+def getMeasureValue(channel: int, index: int) -> tuple[float, float]:
+    """
+    This function specifies a channel and a measurement point index, and returns the
+    measurement data (time and value) for that single point.
+
+    parameters
+    ----------
+    channel : int
+        The channel number (101 to 1002).
+    index : int
+        The index of the measurement point (0 to total number of measurement points - 1).
+
+    returns
+    -------
+    tuple[float, float]
+        A tuple containing:
+        - float: The measurement start time in seconds.
+        - float: The measured value in volts or amperes.
+    """
+    pass
+
+def getCompletedMeasureEventSize(channel: int) -> tuple[int, int]:
+    """
+    This function returns the number of completed measurement events and the total number
+    of measurement events for the specified channel.
+
+    parameters
+    ----------
+    channel : int
+        The channel number (101 to 1002).
+
+    returns
+    -------
+    tuple[int, int]
+        A tuple containing:
+        - int: The number of completed measurement events.
+        - int: The total number of measurement events.
     """
     pass
 
@@ -874,18 +906,17 @@ def getOperationMode(channel: int) -> int:
     """
     pass
 
-def getPatternForceValues(channel: int, index: int) -> tuple[list[float], list[float]]:
+def getPatternForceValues(pattern: str, offset: int) -> tuple[list[float], list[float]]:
     """
-    This function specifies a channel and an index of scalar, and returns the
+    This function specifies a pattern and a start index of scalar data, and returns the
     corresponding scalar data (time and voltage).
 
     parameters
     ----------
-    channel : int
-        The channel number (101 to 1002).
-    index : int
-        The index of the scalar to read data. The index must be 0 to the total number of
-        scalar - 1. Error occurs if the value is out of this range.
+    pattern : str
+        The name of the waveform pattern.
+    offset : int
+        The first index of the scalar data to read (0 to total number of scalars - 1).
 
     returns
     -------
@@ -893,12 +924,10 @@ def getPatternForceValues(channel: int, index: int) -> tuple[list[float], list[f
         A tuple containing:
         - list[float]: A list of time data in seconds.
         - list[float]: A list of voltage data in volts.
-    
+
     example
     -------
-    chId = 101
-    idx = 0
-    times, voltages = getPatternForceValues(chId, idx)
+    times, voltages = getPatternForceValues("Pattern1", 0)
     """
     pass
 
@@ -928,30 +957,25 @@ def getPatternInterpolatedForceValue(channel: int, time: float) -> float:
     """
     pass
 
-def getPatternMeasureTimes(channel: int) -> tuple[list[float], int]:
+def getPatternMeasureTimes(pattern: str) -> list[float]:
     """
-    This function specifies a channel and a range of measurement points, and returns the
-    measurement start time for the points. For the averaging measurement which takes
-    multiple data for one point measurement, the returned value will be (start time +
-    stop time)/2.
+    This function specifies a pattern and returns the measurement start times for its
+    measurement points. For the averaging measurement which takes multiple data for one
+    point measurement, the returned value will be (start time + stop time)/2.
 
     parameters
     ----------
-    channel : int
-        The channel number (101 to 1002).
+    pattern : str
+        The name of the waveform pattern.
 
     returns
     -------
-    tuple[list[float], int]
-        A tuple containing:
-        - list[float]: A list of measurement start times in seconds.
-    
+    list[float]
+        A list of measurement start times in seconds.
+
     example
     -------
-    chId = 101
-    idx = 0
-    len = 5
-    mTimes = getPatternMeasureTimes(chId)
+    mTimes = getPatternMeasureTimes("Pattern1")
     """
     pass
 
@@ -1252,7 +1276,7 @@ def setMeasureEnabled(channel: int, status: int) -> int:
     """
     pass
 
-def setMeasureEvent(pattern: str, event: str, time: float, points: int, interval: float, average: float, rdata: MEASURE_EVENT_DATA_OUTPUT_MODE) -> int:
+def setMeasureEvent(pattern: str, event: str, time: float, points: int, interval: float, average: float, rdata: MEASURE_EVENT_DATA) -> int:
     """
     This function defines a measurement event which is a sampling measurement
     performed by the WGFMU channel while it outputs a waveform pattern. The waveform
@@ -1272,7 +1296,7 @@ def setMeasureEvent(pattern: str, event: str, time: float, points: int, interval
         The sampling interval, in seconds. Must be between 10 ns and 1.34217728 seconds.
     average : float
         The averaging time, in seconds. Must be 0 (no averaging) or between 10 ns and 20 ms.
-    rdata : MEASURE_EVENT_DATA_OUTPUT_MODE
+    rdata : MEASURE_EVENT_DATA
         The output mode of the measurement event data, which can be one of the predefined constants:
         AVERAGED or RAW
 
@@ -1669,7 +1693,7 @@ WGFMU_RESULT_NOT_READY_ERROR: int
 """
 Measurement is in progress. Read the result data after the measurement is completed.
 """
-WGFMU_RESULT_OUT_OF_DATE_ERROR: int
+WGFMU_RESULT_OUT_OF_DATE: int
 """
 Measurement result data was deleted by the setup change. The result data must be read before changing the waveform setup or the measurement setup.
 """
@@ -1856,7 +1880,7 @@ WGFMU_MEASURE_EVENT_COMPLETED: int
 Completed. Ready to read result.
 """
 
-class MEASURE_EVENT_DATA_OUTPUT_MODE(Enum):
+class MEASURE_EVENT_DATA(Enum):
     """
     Measurement event data output modes for the WGFMU channels.
     """
