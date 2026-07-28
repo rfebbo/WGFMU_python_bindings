@@ -1,0 +1,6 @@
+# Build-system declaration so `pip install .` works in an isolated build
+# environment (pip fetches setuptools + pybind11 to build the extension).
+# The actual build logic lives in setup.py (Pybind11Extension).
+[build-system]
+requires = ["setuptools>=64", "pybind11>=2.10"]
+build-backend = "setuptools.build_meta"
