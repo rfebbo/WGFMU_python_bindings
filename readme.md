@@ -42,6 +42,7 @@ Depending on the python version installed, the AdditionalLibraryDirectories and 
 
 Open the .sln file with Visual Studio 2022, right click on the project and build solution.
 
-Once the project is built, copy the .pyd file to the Python site-packages folder.
-
-Optionally copy the .pyi file to the Python site-packages folder for docstrings
+This produces `WGFMUpy.pyd`. Rather than copying it into site-packages by hand, prefer the
+`pip install .` path above — pip installs the module into the correct location and manages
+it. A hand-copied `.pyd` placed elsewhere on `sys.path` (e.g. the stdlib `Lib\` folder) can
+shadow the pip-installed one and load a stale build, so avoid manual copies.
