@@ -1,0 +1,11 @@
+# Python build artifacts
+build/
+dist/
+*.egg-info/
+__pycache__/
+*.pyc
+
+# compiled extension / VS user files
+*.pyd
+*.obj
+*.vcxproj.user
